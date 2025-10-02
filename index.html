@@ -1,20 +1,118 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to riskdetecttest</title>
+    <title>Rights Risk Estimator</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 2em; background: #f9f9f9; color: #222; }
-        h1 { color: #007acc; }
-        .container { background: #fff; padding: 2em; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); max-width: 600px; margin: auto; }
+        body {
+            background-color: #1a1a2e;
+            color: white;
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        textarea {
+            background-color: #16213e;
+            color: white;
+            border: 1px solid #0f3460;
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        button {
+            background-color: #0f3460;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        button:hover {
+            background-color: #e94560;
+        }
+        #riskMeter {
+            padding: 15px;
+            text-align: center;
+            margin: 15px 0;
+            font-weight: bold;
+            border-radius: 5px;
+        }
+        .result {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #16213e;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Welcome to riskdetecttest</h1>
-        <p>This is a basic homepage for your project. You can now publish this site using GitHub Pages!</p>
-        <p>Edit <code>index.html</code> to customize your homepage.</p>
+        <h1>Rights Risk Estimator</h1>
+        
+        <h3>Input CSV (or use sample):</h3>
+        <textarea id="csvInput" rows="8">
+Track,Ownership,Territories,Writers
+Track 1,100%,North America,John Doe
+Track 2,90%,Europe,Jane Smith
+Track 3,100%,,Alex Johnson
+Track 4,100%,Asia,Unknown
+        </textarea>
+        
+        <button onclick="calculateRisk()">Calculate Risk</button>
+        
+        <div id="riskMeter"></div>
+        
+        <div class="result">
+            <p>Catalog at Risk: <span id="catalogRisk">0%</span></p>
+            <p>Potential Royalty Loss: <span id="potentialLoss">$0</span> annually</p>
+        </div>
     </div>
+
+    <script>
+        function calculateRisk() {
+            const csvText = document.getElementById('csvInput').value;
+            const rows = csvText.split('\n').filter(row => row.trim() !== '');
+            
+            if (rows.length < 2) {
+                alert('Invalid CSV format');
+                return;
+            }
+
+            const flagged = rows.slice(1).reduce((acc, row) => {
+                const [_, ownership, territories, writers] = row.split(',');
+                const ownershipFlag = ownership.trim() !== '100%';
+                const territoriesFlag = !territories?.trim();
+                const writersFlag = !writers?.trim() || /unknown|various/i.test(writers);
+                return acc + (ownershipFlag || territoriesFlag || writersFlag ? 1 : 0);
+            }, 0);
+
+            const total = rows.length - 1;
+            const percentAtRisk = (flagged / total) * 100;
+            const potentialLoss = flagged * 500;
+
+            // Update UI
+            document.getElementById('catalogRisk').textContent = `${percentAtRisk.toFixed(1)}%`;
+            document.getElementById('potentialLoss').textContent = `$${potentialLoss}`;
+
+            // Risk meter
+            const riskMeter = document.getElementById('riskMeter');
+            let riskLevel, color;
+            
+            if (percentAtRisk < 10) {
+                riskLevel = 'LOW RISK';
+                color = '#4CAF50';
+            } else if (percentAtRisk <= 25) {
+                riskLevel = 'MEDIUM RISK';
+                color = '#FFC107';
+            } else {
+                riskLevel = 'HIGH RISK';
+                color = '#F44336';
+            }
+
+            riskMeter.textContent = riskLevel;
+            riskMeter.style.backgroundColor = color;
+        }
+    </script>
 </body>
 </html>
